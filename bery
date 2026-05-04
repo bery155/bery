@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Web Lockscreen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Share Tech Mono', monospace;
+      background: #0a0a0f;
+      color: #00ffcc;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    #content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+      text-align: center;
+    }
+    #content h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem;
+      color: #00ffcc;
+      margin-bottom: 1rem;
+      text-shadow: 0 0 20px #00ffcc88;
+    }
+    #content p { color: #aaa; font-size: 1rem; }
+
+    #lockscreen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #0a0a0f;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #lockscreen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,204,0.03) 2px, rgba(0,255,204,0.03) 4px);
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: #00ffcc;
+      border-radius: 50%;
+      opacity: 0;
+      animation: float linear infinite;
+    }
+
+    @keyframes float {
+      0%   { transform: translateY(100vh) translateX(0); opacity: 0; }
+      10%  { opacity: 0.6; }
+      90%  { opacity: 0.6; }
+      100% { transform: translateY(-10vh) translateX(30px); opacity: 0; }
+    }
+
+    .lock-wrap {
+      position: relative;
+      margin-bottom: 2rem;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { filter: drop-shadow(0 0 8px #00ffcc); }
+      50%       { filter: drop-shadow(0 0 24px #00ffcc); }
+    }
+
+    .lock-icon {
+      width: 80px; height: 80px;
+      border: 3px solid #00ffcc;
+      border-radius: 12px;
+      position: relative;
+      margin: 0 auto;
+    }
+    .lock-icon::before {
+      content: '';
+      position: absolute;
+      top: -32px; left: 50%;
+      transform: translateX(-50%);
+      width: 36px; height: 36px;
+      border: 3px solid #00ffcc;
+      border-bottom: none;
+      border-radius: 18px 18px 0 0;
+    }
+    .lock-icon::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 12px; height: 12px;
+      background: #00ffcc;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #00ffcc;
+    }
+
+    #clock {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 3.5rem;
+      font-weight: 900;
+      color: #00ffcc;
+      letter-spacing: 4px;
+      text-shadow: 0 0 30px #00ffcc88;
+      margin-bottom: 0.3rem;
+    }
+
+    #date {
+      font-size: 0.85rem;
+      color: #00ffcc99;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 2.5rem;
+    }
+
+    .card {
+      background: rgba(0,255,204,0.04);
+      border: 1px solid rgba(0,255,204,0.2);
+      border-radius: 16px;
+      padding: 2rem 2.5rem;
+      width: 340px;
+      backdrop-filter: blur(10px);
+      position: relative;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 10%; right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #00ffcc, transparent);
+    }
+
+    .card h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      color: #00ffcc88;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .input-wrap {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+    .input-wrap input {
+      width: 100%;
+      background: rgba(0,255,204,0.06);
+      border: 1px solid rgba(0,255,204,0.3);
+      border-radius: 8px;
+      padding: 0.85rem 3rem 0.85rem 1rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.1rem;
+      color: #00ffcc;
+      letter-spacing: 4px;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .input-wrap input::placeholder { color: #00ffcc44; letter-spacing: 2px; font-size: 0.9rem; }
+    .input-wrap input:focus {
+      border-color: #00ffcc;
+      box-shadow: 0 0 15px rgba(0,255,204,0.2);
+    }
+    .toggle-pw {
+      position: absolute;
+      right: 0.75rem; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      color: #00ffcc66; cursor: pointer;
+      font-size: 1rem; padding: 4px;
+      transition: color 0.2s;
+    }
+    .toggle-pw:hover { color: #00ffcc; }
+
+    .btn {
+      width: 100%;
+      padding: 0.85rem;
+      background: transparent;
+      border: 1px solid #00ffcc;
+      border-radius: 8px;
+      color: #00ffcc;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.85rem;
+      letter-spacing: 3px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .btn:hover {
+      background: rgba(0,255,204,0.08);
+      box-shadow: 0 0 20px rgba(0,255,204,0.3);
+    }
+    .btn:active { transform: scale(0.98); }
+
+    .error-msg {
+      margin-top: 0.75rem;
+      font-size: 0.8rem;
+      color: #ff4466;
+      text-align: center;
+      min-height: 1.2em;
+      letter-spacing: 1px;
+    }
+
+    .card.shake { animation: shakeCard 0.4s ease; }
+    @keyframes shakeCard {
+      0%,100% { transform: translateX(0); }
+      20%,60%  { transform: translateX(-8px); }
+      40%,80%  { transform: translateX(8px); }
+    }
+
+    #lockscreen.unlocking {
+      animation: unlockFade 0.8s forwards;
+    }
+    @keyframes unlockFade {
+      0%   { opacity: 1; transform: scale(1); }
+      50%  { opacity: 0.5; transform: scale(1.05); }
+      100% { opacity: 0; transform: scale(0.95); pointer-events: none; }
+    }
+
+    .hint {
+      margin-top: 1.2rem;
+      font-size: 0.72rem;
+      color: #00ffcc33;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="content">
+  <h1>🔓 Selamat Datang!</h1>
+  <p>Kamu berhasil membuka kunci halaman ini.</p>
+  <p style="margin-top:1rem;color:#00ffcc88;">Ini adalah konten yang dilindungi lockscreen.</p>
+</div>
+
+<div id="lockscreen">
+  <div id="particles"></div>
+
+  <div class="lock-wrap">
+    <div class="lock-icon"></div>
+  </div>
+
+  <div id="clock">00:00:00</div>
+  <div id="date">Memuat tanggal...</div>
+
+  <div class="card" id="card">
+    <h2>🔐 Masukkan Kata Sandi</h2>
+    <div class="input-wrap">
+      <input type="password" id="pwInput" placeholder="kata sandi..." autocomplete="off" />
+      <button class="toggle-pw" id="toggleBtn" title="Tampilkan/Sembunyikan">👁</button>
+    </div>
+    <button class="btn" id="unlockBtn">BUKA KUNCI</button>
+    <div class="error-msg" id="errorMsg"></div>
+    <div class="hint">Tekan Enter atau klik tombol untuk membuka</div>
+  </div>
+</div>
+
+<script>
+  const PASSWORD = "bery";
+
+  function updateClock() {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    const ss = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById('clock').textContent = `${hh}:${mm}:${ss}`;
+
+    const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+    document.getElementById('date').textContent =
+      `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  const pContainer = document.getElementById('particles');
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.animationDuration = (6 + Math.random() * 10) + 's';
+    p.style.animationDelay = (Math.random() * 10) + 's';
+    p.style.width = p.style.height = (1 + Math.random() * 3) + 'px';
+    pContainer.appendChild(p);
+  }
+
+  const pwInput = document.getElementById('pwInput');
+  document.getElementById('toggleBtn').addEventListener('click', () => {
+    pwInput.type = pwInput.type === 'password' ? 'text' : 'password';
+  });
+
+  function tryUnlock() {
+    const val = pwInput.value;
+    const card = document.getElementById('card');
+    const errorMsg = document.getElementById('errorMsg');
+
+    if (val === PASSWORD) {
+      errorMsg.textContent = '✅ Kata sandi benar! Membuka...';
+      errorMsg.style.color = '#00ffcc';
+      setTimeout(() => {
+        document.getElementById('lockscreen').classList.add('unlocking');
+        setTimeout(() => {
+          document.getElementById('lockscreen').style.display = 'none';
+        }, 800);
+      }, 500);
+    } else {
+      errorMsg.textContent = '❌ Kata sandi salah. Coba lagi.';
+      errorMsg.style.color = '#ff4466';
+      card.classList.remove('shake');
+      void card.offsetWidth;
+      card.classList.add('shake');
+      pwInput.value = '';
+      pwInput.focus();
+    }
+  }
+
+  document.getElementById('unlockBtn').addEventListener('click', tryUnlock);
+  pwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryUnlock(); });
+
+  document.addEventListener('contextmenu', (e) => e.preventDefault());
+  document.addEventListener('keydown', (e) => {
+    if (document.getElementById('lockscreen').style.display !== 'none') {
+      if (e.key === 'F12' ||
+          (e.ctrlKey && ['w','W','r','R','t','T'].includes(e.key)) ||
+          e.key === 'F5') {
+        e.preventDefault();
+      }
+    }
+  });
+
+  pwInput.focus();
+</script>
+</body>
+</html>
